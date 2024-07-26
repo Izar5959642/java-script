@@ -1,231 +1,141 @@
-import { StatusBar } from "expo-status-bar";
-import React, { useState } from "react";
-import {
-  StyleSheet,
-  Text,
-  View,
-  Dimensions,
-  SafeAreaView,
-  TouchableOpacity,
-} from "react-native";
+import React, { useState } from 'react';
+import { SafeAreaView, View, Text, TouchableOpacity, StyleSheet, Dimensions, } from 'react-native';
+
 
 const windowWidth = Dimensions.get("window").width;
 
-export default function App() {
-  const [answerValue, setAnswerValue] = useState(0);
-  const [readyToReplace, setReadyToReplace] = useState(true);
-  const [memoryValue, setMemoryValue] = useState("");
-  const [operatorValue, setOperatorValue] = useState("");
 
-  const handleNumber = (value) => {
-    if (readyToReplace) {
-      // console.log(typeof(value) , typeof(value.toString()))
-      return value.toString();
+
+const calculate = (expression) => {
+  const sanitizedExpression = expression.replace(/[^-\d/*+.%]/g, '');
+  // console.log(sanitizedExpression);
+
+  const percentageConvertedExpression = sanitizedExpression.replace(/(\d+(\.\d+)?)%/g, '($1 * 0.01)');
+
+  try {
+    const result = new Function('return ' + percentageConvertedExpression)();
+    return result.toString();
+  } catch {
+    return 'Error';
+  }
+};
+
+const App = () => {
+  const [display, setDisplay] = useState('0');
+  const [currentInput, setCurrentInput] = useState('');
+
+  const clearDisplay = () => {
+    setCurrentInput('');
+    setDisplay('0');
+  };
+
+  // const deleteLast = () => {
+  //   setCurrentInput(currentInput.slice(0, -1));
+  //   setDisplay(currentInput.slice(0, -1) || '0');
+  // };
+
+  const appendNumber = (number) => {
+    setCurrentInput(currentInput + number);
+    setDisplay(currentInput + number);
+  };
+
+  // const appendOperator = (operator) => {
+  //   setCurrentInput(currentInput + operator);
+  //   setDisplay(currentInput + operator);
+  // };
+
+  const toggleSign = () => {
+    if (currentInput.charAt(0) === '-') {
+      setCurrentInput(currentInput.slice(1));
+      setDisplay(currentInput.slice(1));
     } else {
-      return answerValue.toString() + value.toString();
+      setCurrentInput('-' + currentInput);
+      setDisplay('-' + currentInput);
     }
   };
 
-  const buttonPressed = (value) => {
-    console.log(value)
-
-    if (!isNaN(value)) {
-      console.log("Enter to if statsment")
-
-      const updatedValue = handleNumber(value.toString());
-      setReadyToReplace(false);
-      setAnswerValue(updatedValue);
-    } else if (value === "C") {
-      console.log("Enter to else if statsment")
-
-      setAnswerValue(0);
-      setMemoryValue("");
-      setOperatorValue("");
-      setReadyToReplace(true);
-    } else if (value === "x" || value === "/" || value === "+" || value === "-") {
-      if (operatorValue) {
-        calculateEquals();
-        setOperatorValue(value);
-        setReadyToReplace(true);
-      } else {
-        setMemoryValue(answerValue);
-        setOperatorValue(value);
-        setReadyToReplace(true);
-      }
-    } else if (value === "=") {
-      calculateEquals();
-      setMemoryValue("");
-      setOperatorValue("");
-      setReadyToReplace(true);
-    } else if (value === "+/-") {
-      if (answerValue !== 0) {
-        const newValue = answerValue * -1;
-        setAnswerValue(newValue);
-      }
-    } else if (value === "%") {
-      const perValue = answerValue * 0.01;
-      setAnswerValue(perValue);
-    }
+  const calculateResult = () => {
+    const result = calculate(currentInput);
+    setCurrentInput(result);
+    setDisplay(result);
   };
 
-  const calculateEquals = () => {
-    const previous = parseFloat(memoryValue);
-    const current = parseFloat(answerValue);
-    let result = 0;
+  const renderButton = (label, onPress, style = {}) => (
+    <TouchableOpacity onPress={onPress} style={[styles.button, style]}>
+      <Text style={styles.buttonText}>{label}</Text>
+    </TouchableOpacity>
+  );
 
-    switch (operatorValue) {
-      case "x":
-        result = previous * current;
-        break;
-      case "/":
-        result = previous / current;
-        break;
-      case "+":
-        result = previous + current;
-        break;
-      case "-":
-        result = previous - current;
-        break;
-      default:
-        return result;
-    }
 
-    setAnswerValue(result);
-    setOperatorValue("");
-    return result;
-  };
+
 
   return (
     <SafeAreaView style={styles.container}>
-      <View style={styles.container}>
-        {/* Green background for result line */}
-        <View style={styles.resultContainer}>
-          <Text style={styles.textElement}>{answerValue}</Text>
-        </View>
-
-        <StatusBar style="dark" />
-
-        {/* Button rows */}
-        <View style={styles.row}>
-          <TouchableOpacity style={styles.btnc} onPress={() => buttonPressed("C")}>
-            <Text style={styles.textTopfirst3btns}> C </Text>
-          </TouchableOpacity>
-
-          <TouchableOpacity style={styles.btnc} onPress={() => buttonPressed("+/-")}>
-            <Text style={styles.textTopfirst3btns}> +/- </Text>
-          </TouchableOpacity>
-
-          <TouchableOpacity style={styles.btnc} onPress={() => buttonPressed("%")}>
-            <Text style={styles.textTopfirst3btns}> % </Text>
-          </TouchableOpacity>
-
-          <TouchableOpacity style={styles.btnc} onPress={() => buttonPressed("/")}>
-            <Text style={styles.textTopfirst3btns}> / </Text>
-          </TouchableOpacity>
-        </View>
-
-        <View style={styles.row}>
-          <TouchableOpacity style={styles.btnc} onPress={() => buttonPressed(7)}>
-            <Text style={styles.textAllbtn}> 7 </Text>
-          </TouchableOpacity>
-
-          <TouchableOpacity style={styles.btnc} onPress={() => buttonPressed(8)}>
-            <Text style={styles.textAllbtn}> 8 </Text>
-          </TouchableOpacity>
-
-          <TouchableOpacity style={styles.btnc} onPress={() => buttonPressed(9)}>
-            <Text style={styles.textAllbtn}> 9 </ Text>
-          </TouchableOpacity>
-
-          <TouchableOpacity style={styles.btnc} onPress={() => buttonPressed("x")}>
-            <Text style={styles.textTopfirst3btns}> x </Text>
-          </TouchableOpacity>
-        </View>
-
-        <View style={styles.row}>
-          <TouchableOpacity style={styles.btnc} onPress={() => buttonPressed(4)}>
-            <Text style={styles.textAllbtn}> 4 </Text>
-          </TouchableOpacity>
-
-          <TouchableOpacity style={styles.btnc} onPress={() => buttonPressed(5)}>
-            <Text style={styles.textAllbtn}> 5 </Text>
-          </TouchableOpacity>
-
-          <TouchableOpacity style={styles.btnc} onPress={() => buttonPressed(6)}>
-            <Text style={styles.textAllbtn}> 6 </Text>
-          </TouchableOpacity>
-
-          <TouchableOpacity style={styles.btnc} onPress={() => buttonPressed("-")}>
-            <Text style={styles.textTopfirst3btns}> - </ Text>
-          </TouchableOpacity>
-        </View>
-
-        <View style={styles.row}>
-          <TouchableOpacity style={styles.btnc} onPress={() => buttonPressed(1)}>
-            <Text style={styles.textAllbtn}> 1 </Text>
-          </TouchableOpacity>
-
-          <TouchableOpacity style={styles.btnc} onPress={() => buttonPressed(2)}>
-            <Text style={styles.textAllbtn}> 2 </Text>
-          </TouchableOpacity>
-
-          <TouchableOpacity style={styles.btnc} onPress={() => buttonPressed(3)}>
-            <Text style={styles.textAllbtn}> 3 </Text>
-          </TouchableOpacity>
-
-          <TouchableOpacity style={styles.btnc} onPress={() => buttonPressed("+")}>
-            <Text style={styles.textTopfirst3btns}> + </ Text>
-          </TouchableOpacity>
-        </View>
-
-        <View style={styles.row}>
-          <TouchableOpacity style={styles.btnc} onPress={() => buttonPressed(0)}>
-            <Text style={styles.textLongbtn}> 0 </Text>
-          </TouchableOpacity>
-
-          <TouchableOpacity style={styles.btnc} onPress={() => buttonPressed(".")}>
-            <Text style={styles.textTopfirst3btns}> . </Text>
-          </TouchableOpacity>
-
-          <TouchableOpacity style={styles.longbtn} onPress={() => buttonPressed("=")}>
-            <Text style={styles.textTopfirst3btns}> = </ Text>
-          </TouchableOpacity>
+      <View style={styles.calculator}>
+        <Text style={styles.display}>{display}</Text>
+        <View style={styles.buttons}>
+          {renderButton('C', clearDisplay, styles.specialButton)}
+          {renderButton('+-', toggleSign, styles.specialButton)}
+          {renderButton('%', () => appendNumber('%'), styles.specialButton)}
+          {renderButton('/', () => appendNumber('/'), styles.specialButton)}
+          {renderButton('7', () => appendNumber('7'))}
+          {renderButton('8', () => appendNumber('8'))}
+          {renderButton('9', () => appendNumber('9'))}
+          {renderButton('X', () => appendNumber('*'), styles.specialButton)}
+          {renderButton('4', () => appendNumber('4'))}
+          {renderButton('5', () => appendNumber('5'))}
+          {renderButton('6', () => appendNumber('6'))}
+          {renderButton('-', () => appendNumber('-'), styles.specialButton)}
+          {renderButton('1', () => appendNumber('1'))}
+          {renderButton('2', () => appendNumber('2'))}
+          {renderButton('3', () => appendNumber('3'))}
+          {renderButton('+', () => appendNumber('+'), styles.specialButton)}
+          {renderButton('0', () => appendNumber('0'))}
+          {renderButton('.', () => appendNumber('.'))}
+          {renderButton('=', calculateResult, styles.equalButton)}
         </View>
       </View>
     </SafeAreaView>
   );
-}
+};
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "black",
-    alignItems: "center",
-    justifyContent: "flex-end",
+    backgroundColor: '#000',
+    justifyContent: "flex-end"
   },
   row: {
     flexDirection: 'row',
     justifyContent: 'center',
     marginBottom: 10,
   },
-  resultContainer: {
-    width: "100%",
+  calculator: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 10,
+  },
+  display: {
+    width: '100%',
+    backgroundColor: '#4CAF50', borderRadius: 10,
     width: windowWidth, textAlign: 'right',
-    marginTop: 20,
-    marginBottom: 20,
-    marginRight: 0,
-    marginLeft: 0,
-    display: "flex",
+    width: "100%",
+
+    color: '#fff',
+    textAlign: 'right',
+    fontSize: 48,
+    padding: 10,
+    borderRadius: 5,
     justifyContent: "end",
-    textAlign: "right",
-    backgroundColor: "green", borderRadius: 10
+    marginBottom: 10,
   },
-  textElement: {
-    color: "white",
-    fontSize: 70,
-    textAlign: "right",
+  buttons: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    justifyContent: 'space-between',
   },
-  btnc: {
+  button: {
     backgroundColor: "purple",
     marginTop: -5,
     marginBottom: 10,
@@ -239,7 +149,16 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     alignItems: "center",
   },
-  longbtn: {
+  buttonText: {
+    fontSize: 24,
+    color: '#fff',
+  },
+
+  specialButton: {
+    backgroundColor: 'purple',
+  },
+
+  equalButton: {
     backgroundColor: "red",
     marginTop: -5,
     marginBottom: 15,
@@ -249,38 +168,11 @@ const styles = StyleSheet.create({
     width: windowWidth / 2.4,
     borderRadius: 200,
     borderColor: "red",
-    borderWidth: 4,
+    borderWidth: 2,
     justifyContent: "center",
     alignItems: "center",
-  },
-  textAllbtn: {
-    fontSize: 35,
-    marginTop: 20,
-    marginBottom: 10,
-    marginRight: 15,
-    marginLeft: 10,
-    color: "white",
-    textAlign: "center",
-    justifyContent: "center",
-  },
-  textLongbtn: {
-    fontSize: 35,
-    marginTop: 20,
-    marginBottom: 10,
-    marginRight: 15,
-    marginLeft: 10,
-    color: "white",
-    textAlign: "left",
-    justifyContent: "center",
-  },
-  textTopfirst3btns: {
-    fontSize: 25,
-    marginTop: 20,
-    marginBottom: 10,
-    marginRight: 15,
-    marginLeft: 10,
-    color: "white",
-    textAlign: "center",
-    justifyContent: "center",
+    flex: 2,
   },
 });
+
+export default App;
